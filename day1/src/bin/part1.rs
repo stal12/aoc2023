@@ -24,23 +24,7 @@ fn main() {
     
     let input_str = include_str!("input.txt");
 
-    let re = Regex::new(r"\d").unwrap();
-    
-    let mut sum = 0;
-    for line in input_str.lines() {
-        let mut matches = re.find_iter(line).peekable();
-        let first_match = matches.peek().unwrap().clone();
-        let last_match = matches.last().unwrap().clone();
-        
-        let first_digit : i32 = match_to_digit(first_match.as_str());
-        let last_digit : i32 = match_to_digit(last_match.as_str());
-        
-        let value = first_digit * 10 + last_digit;              
-        sum += value;
-    }
-
-    print!("Part 1: {}\n", sum);
-
+    print!("Part 1: {}\n", part1(input_str));
 
     let re_first = Regex::new(r"\d|zero|one|two|three|four|five|six|seven|eight|nine").unwrap();
     let re_last = Regex::new(r".*(\d|zero|one|two|three|four|five|six|seven|eight|nine)").unwrap();
@@ -60,4 +44,38 @@ fn main() {
     print!("Part 2: {}\n", sum);
 
 
+}
+
+fn part1(input: &str) -> String {
+    let re = Regex::new(r"\d").unwrap();
+    
+    let mut sum = 0;
+    for line in input.lines() {
+        let mut matches = re.find_iter(line).peekable();
+        let first_match = matches.peek().unwrap().clone();
+        let last_match = matches.last().unwrap().clone();
+        
+        let first_digit : i32 = match_to_digit(first_match.as_str());
+        let last_digit : i32 = match_to_digit(last_match.as_str());
+        
+        let value = first_digit * 10 + last_digit;              
+        sum += value;
+    }
+
+    sum.to_string()
+}
+
+#[cfg(test)]
+mod tests {
+use super::*;
+
+    #[test]
+    fn it_works() {
+        let result = part1(
+            "1abc2
+        pqr3stu8vwx
+        a1b2c3d4e5f
+        treb7uchet");
+        assert_eq!(result, "142");
+    }
 }
