@@ -1,11 +1,13 @@
 use std::iter::repeat;
 use regex::Regex;
 use itertools::Itertools;
+use std::collections::HashMap;
 
 fn main() {
     let input_str = include_str!("input.txt");
     print!("part 2: {}\n", part2(input_str));
 }
+
 fn part2(input: &str) -> String {
     let lines = parse_input(input);
     print!("{:?}\n", lines);
@@ -18,20 +20,30 @@ fn part2(input: &str) -> String {
     sum.to_string()
 }
 
-fn count_arrangements_rec(line: &[u8], correct_groups: &[i32], count: &mut i64, mut pos: usize, group: usize, mut to_leave: i32) {
+fn count_arrangements_rec(line: &[u8], correct_groups: &[i32], start_pos: usize, group: usize, mut to_leave: i32,
+                          hashtag_from_here: &[i32], group_sum_from_here: i32, memo: &mut HashMap<(usize, usize), i64>) -> i64 {
+    let memo_result = memo.get(&(start_pos, group));
+    if memo_result.is_some() {
+        return memo_result.unwrap().clone();
+    }
+
+    let mut pos = start_pos;
+
+    if pos == line.len() {
+        return 1;
+    }
+
+    if hashtag_from_here[pos] > group_sum_from_here {
+        return 0;
+    }
+
     if group == correct_groups.len() {
-        for i in pos..line.len() {
-            if line[i] == '#' as u8 {
-                return;
-            }
-        }
-        *count += 1;
-        return;
+        return 1;
     }
 
     if group > 0 {
         if line[pos] != '.' as u8 && line[pos] != '?' as u8 {
-            return;
+            return 0;
         }
         pos += 1;
     }
@@ -46,6 +58,7 @@ fn count_arrangements_rec(line: &[u8], correct_groups: &[i32], count: &mut i64, 
             break;
         }
     }
+    let mut nested_solutions = 0;
     for start in pos..=max_start {
         let mut found = true;
         for i in 0..group_size as usize {
@@ -55,17 +68,28 @@ fn count_arrangements_rec(line: &[u8], correct_groups: &[i32], count: &mut i64, 
             }
         }
         if found {
-            count_arrangements_rec(line, correct_groups, count, start + group_size as usize, group + 1, to_leave)
+            nested_solutions += count_arrangements_rec(line, correct_groups, start + group_size as usize,
+                                                       group + 1, to_leave, hashtag_from_here, group_sum_from_here - group_size, memo);
         }
     }
+    memo.insert((start_pos, group), nested_solutions);
+    nested_solutions
 }
 
 fn count_arrangements(line: &str, correct_groups: &[i32]) -> i64 {
     let line_tmp: Vec<u8> = line.bytes().collect();
-    let mut count = 0;
     let to_leave: i32 = correct_groups.iter().sum::<i32>() + correct_groups.len() as i32;
-    count_arrangements_rec(&line_tmp, correct_groups, &mut count,0, 0, to_leave);
-    count
+    let mut hashtag_from_here = vec![0; line_tmp.len()];
+    let mut count_hashtag = 0;
+    for i in (0..line_tmp.len()).rev() {
+        if line_tmp[i] == '#' as u8 {
+            count_hashtag += 1;
+        }
+        hashtag_from_here[i] = count_hashtag;
+    }
+    let mut memo: HashMap<(usize, usize), i64> = HashMap::new();
+    let solutions = count_arrangements_rec(&line_tmp, correct_groups, 0, 0, to_leave, &hashtag_from_here, correct_groups.iter().sum(), &mut memo);
+    solutions
 }
 
 fn parse_line(input: &str) -> (String, Vec<i32>) {
