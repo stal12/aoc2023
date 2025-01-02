@@ -9,16 +9,16 @@ fn part1(input: &str) -> String {
     let hands: Vec<(&str, u32)> = parse_input(input);
     print!("{:?}\n", hands);
     let mut number_hands: Vec<(u32, u32)> = hands.iter()
-        .map(|(hand, bid)| (hand_to_number(hand), bid.clone()))
+        .map(|&(hand, bid)| (hand_to_number(hand), bid))
         .collect();
     print!("{:?}\n", number_hands);
     for (number_hand, _) in &number_hands {
         print!("{:#x}\n", number_hand);
     }
 
-    number_hands.sort_by_key(|(number_hand, _)| *number_hand);
+    number_hands.sort_by_key(|&(number_hand, _)| number_hand);
     let winnings: u32 = number_hands.iter().enumerate()
-        .map(|(i, (_, bid))| (i as u32 +1) * *bid)
+        .map(|(i, &(_, bid))| (i as u32 +1) * bid)
         .sum();
 
     winnings.to_string()
@@ -27,8 +27,8 @@ fn part1(input: &str) -> String {
 fn hand_to_number(hand: &str) -> u32 {
     let char_set: HashSet<_> = hand.chars().collect();
     let char_vec: Vec<_> = char_set.iter().copied().collect();
-    let first_char_count = hand.chars().filter(|c| *c == *char_vec.first().unwrap()).count();
-    let second_char_count = hand.chars().filter(|c| *c == *char_vec.last().unwrap()).count();
+    let first_char_count = hand.chars().filter(|&c| c == *char_vec.first().unwrap()).count();
+    let second_char_count = hand.chars().filter(|&c| c == *char_vec.last().unwrap()).count();
     let first_digit = match char_set.len() {
         1 => 6,
         2 => match first_char_count {
